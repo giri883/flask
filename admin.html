@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Manage Businesses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Rating</th>
+            <th>Approved</th>
+            <th>Actions</th>
+        </tr>
+        {% for biz in businesses %}
+        <tr>
+            <td>{{ biz[1] }}</td>
+            <td>{{ biz[2] }}</td>
+            <td>{{ biz[3] }}</td>
+            <td>{{ biz[4] }}</td>
+            <td>{{ 'Yes' if biz[5] else 'No' }}</td>
+            <td>
+                {% if not biz[5] %}
+                    <a href="{{ url_for('approve', business_id=biz[0]) }}">Approve</a>
+                {% endif %}
+                <a href="{{ url_for('delete', business_id=biz[0]) }}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

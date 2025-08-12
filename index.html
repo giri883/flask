@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Local Business Directory</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* small, optional inline styles — remove if you prefer only style.css */
+    .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:18px; }
+    .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .search-input { padding:8px 10px; border-radius:6px; border:1px solid #ccc; min-width:180px; }
+    .select { padding:8px 10px; border-radius:6px; border:1px solid #ccc; }
+    .btn { display:inline-block; padding:8px 12px; border-radius:6px; text-decoration:none; background:#007BFF; color:#fff; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; }
+    .card { background:#fff; border:1px solid #eee; padding:14px; border-radius:10px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .biz-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .biz-name { margin:0; font-size:1.1rem; }
+    .meta { color:#666; font-size:0.92rem; margin-top:6px; }
+    .rating { margin-top:8px; font-size:0.95rem; }
+    .stars { color:#f5a623; } /* star color (can override in style.css) */
+    .no-results { color:#555; padding:12px 0; }
+  </style>
+</head>
+<body>
+  <main class="container" style="max-width:1100px; margin:28px auto;">
+    <header class="topbar">
+      <div>
+        <h1 style="margin:0 0 6px 0;">Local Business Directory</h1>
+        <div style="color:#666; font-size:0.95rem;">Discover local businesses in your area</div>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <a class="btn" href="{{ url_for('add_business') }}">Add Your Business</a>
+        <a class="btn" href="{{ url_for('admin') }}" style="background:#28a745;">Admin Panel</a>
+      </div>
+    </header>
+
+    <!-- Search & Filters -->
+    <form method="GET" action="{{ url_for('index') }}" class="controls" style="margin-bottom:16px;">
+      <input
+        class="search-input"
+        type="search"
+        name="q"
+        placeholder="Search businesses, location or name..."
+        value="{{ request.args.get('q','') if request is defined else '' }}"
+        />
+
+      <select name="category" class="select">
+        <option value="">All categories</option>
+        {% if categories is defined %}
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if request.args.get('category')==cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+
+      <button class="btn" type="submit">Filter</button>
+
+      <!-- optional: sort by rating -->
+      <select name="sort" class="select" title="Sort">
+        <option value="">Sort</option>
+        <option value="rating_desc" {% if request.args.get('sort')=='rating_desc' %}selected{% endif %}>Rating: High → Low</option>
+        <option value="rating_asc" {% if request.args.get('sort')=='rating_asc' %}selected{% endif %}>Rating: Low → High</option>
+      </select>
+    </form>
+
+    <hr style="border:none;border-top:1px solid #eee;margin:12px 0 18px 0;">
+
+    <!-- Business list -->
+    {% if businesses %}
+      <div class="grid">
+        {% for biz in businesses %}
+          {# assume biz is a tuple or object; adjust indices or attributes as your backend provides #}
+          {% set id = biz[0] if biz[0] is defined else biz.id %}
+          {% set name = biz[1] if biz[1] is defined else biz.name %}
+          {% set category = biz[2] if biz[2] is defined else biz.category %}
+          {% set location = biz[3] if biz[3] is defined else biz.location %}
+          {% set rating = biz[4] if biz[4] is defined else biz.rating %}
+          <article class="card" aria-labelledby="biz-{{ id }}">
+            <div class="biz-header">
+              <h2 id="biz-{{ id }}" class="biz-name">{{ name }}</h2>
+              <div style="font-size:0.9rem; color:#555;">{{ category }}</div>
+            </div>
+
+            <div class="meta">
+              <strong>Location:</strong> {{ location }}
+            </div>
+
+            <div class="rating" aria-label="Rating: {{ rating }} out of 5">
+              <span class="stars" title="{{ rating }}/5">
+                {% set full = rating|int %}
+                {% for i in range(1,6) %}
+                  {% if i <= full %}
+                    &#9733;
+                  {% else %}
+                    &#9734;
+                  {% endif %}
+                {% endfor %}
+              </span>
+              <span style="margin-left:8px; color:#444;">{{ rating }}/5</span>
+            </div>
+
+            <!-- admin quick links (optional, shown only if user is admin - implement logic in backend) -->
+            {% if current_user is defined and current_user.is_admin %}
+              <div style="margin-top:10px;">
+                <a href="{{ url_for('approve', business_id=id) }}">Approve</a> |
+                <a href="{{ url_for('delete', business_id=id) }}" onclick="return confirm('Delete this listing?')">Delete</a>
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="no-results">No businesses found. Try clearing filters or <a href="{{ url_for('add_business') }}">add a business</a>.</p>
+    {% endif %}
+
+    <!-- optional footer / pagination placeholder -->
+    <footer style="margin-top:22px; color:#777; font-size:0.9rem;">
+      Showing {{ businesses|length if businesses is defined else 0 }} result(s).
+      

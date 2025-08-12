@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Business</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Add a New Business</h1>
+    <form method="POST">
+        <input type="text" name="name" placeholder="Business Name" required>
+        <br><br>
+        <input type="text" name="category" placeholder="Category" required>
+        <br><br>
+        <input type="text" name="location" placeholder="Location" required>
+        <br><br>
+        <input type="number" name="rating" min="1" max="5" placeholder="Rating (1-5)" required>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
